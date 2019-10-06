@@ -1,0 +1,6 @@
+tortoise-orm
+aiosqlite
+asyncpg
+tornado
+pyyaml
+react

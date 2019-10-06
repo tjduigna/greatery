@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.4.3",
+    "@material-ui/icons": "^4.4.3",
+    "@babel/core": "^7.6.0",
+    "@babel/register": "^7.6.0",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
+    "body-parser": "^1.14.1",
+    "express": "^4.13.3",
+    "react": "^16.10.2",
+    "react-dom": "^16.10.2",
+    "react-render": "^4.0.0",
+    "react-select": "^3.0.0",
+    "yargs": "^3.29.0"
+  }
+}

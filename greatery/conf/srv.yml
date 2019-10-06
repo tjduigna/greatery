@@ -1,0 +1,4 @@
+local:
+    port: 3000
+    debug: True
+    serve_traceback: True
