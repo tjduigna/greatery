@@ -9,6 +9,7 @@ class Ingredient(Model):
     id = fields.IntField(pk=True)
     name = fields.TextField()
     desc = fields.TextField()
+    quantity = fields.ManyToManyField('models.Quantity', related_name='quantitys')
 
     def __str__(self):
         return f"{self.name}:{self.desc[:30]}"

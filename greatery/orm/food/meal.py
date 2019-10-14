@@ -9,4 +9,4 @@ class Meal(Model):
     id = fields.IntField(pk=True)
     name = fields.TextField()
     kind = fields.TextField()
-#     preparations = fields.
+    recipe = fields.ManyToManyField('models.Recipe', related_name='recipes')

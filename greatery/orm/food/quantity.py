@@ -7,7 +7,8 @@ from tortoise import fields
 
 class Quantity(Model):
     id = fields.IntField(pk=True)
-    amount = fields.FloatField()
+    amount = fields.DecimalField(max_digits=38, decimal_places=12)
+    unit = fields.ForeignKeyField('models.Unit', related_name='units')
 
     def __str__(self):
         return f'{self.name}({self.amount};{self.unit})'

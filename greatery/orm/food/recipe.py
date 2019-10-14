@@ -5,9 +5,11 @@
 from tortoise.models import Model
 from tortoise import fields
 
-class Preparation(Model):
+class Recipe(Model):
     id = fields.IntField(pk=True)
     name = fields.TextField()
+    desc = fields.TextField()
+    ingredient = fields.ManyToManyField('models.Ingredient', related_name='ingredients')
 
     def __str__(self):
-        return self.name
+        return f"{self.name}:{self.desc[:30]}"

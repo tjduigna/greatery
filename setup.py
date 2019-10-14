@@ -10,4 +10,4 @@ with open('requirements.txt', 'r') as f:
             if not ln.strip().startswith('#')]
 
 setup(name='greatery',
-      requires=deps)
+      install_requires=deps)

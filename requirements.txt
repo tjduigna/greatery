@@ -1,6 +1,5 @@
-tortoise-orm
-aiosqlite
-asyncpg
+pytest-tornado
 tornado
-pyyaml
+sprout
+onion
 react

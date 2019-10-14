@@ -8,6 +8,8 @@ from tortoise import fields
 class Unit(Model):
     id = fields.IntField(pk=True)
     name = fields.TextField()
+    abbr = fields.TextField()
+    desc = fields.TextField()
 
     def __str__(self):
         return self.name
