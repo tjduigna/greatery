@@ -11,9 +11,10 @@ from tornado.ioloop import IOLoop
 import tornado.web
 
 from react.render import render_component
+from sprout.init_db import init_db, db_pool
 
 import greatery
-from greatery.orm.init_db import init_db, db_pool
+from greatery.core import Engine
 from greatery.api.ingredient import IngredientHandler, ingredients
 
 
@@ -44,16 +45,18 @@ class IndexHandler(tornado.web.RequestHandler):
                 'kinds_of_entries': kinds_of_entries,
                 'xsrf': self.xsrf_token.decode('ascii')
             }, to_static_markup=False)
+        print("markup", rendered.data)
+        print("props", rendered.props)
+        print("data", rendered.data)
         self.render('index.html',
                     title='Greatery',
                     rendered=rendered)
 
 
-
 def main():
     stg = {
         'template_path': _here('templates'),
-        'static_path': _here('static'),
+         'static_path': _here('src'),
         'cookie_secret': os.urandom(12),
         'xsrf_cookies': True,
         'debug': True,
@@ -65,8 +68,8 @@ def main():
         (r"/ingredients", IngredientHandler),
     ], **stg)
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(init_db())
-    app.db_pool = loop.run_until_complete(db_pool())
+    app.engine = Engine(loop=loop)
+    app.db_pool = loop.run_until_complete(db_pool('greatery'))
     srv = HTTPServer(app)
     srv.listen(greatery.cfg.srv_opts['port'])
     IOLoop.current().start()

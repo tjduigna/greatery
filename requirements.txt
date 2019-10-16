@@ -3,3 +3,4 @@ tornado
 sprout
 onion
 react
+websockets

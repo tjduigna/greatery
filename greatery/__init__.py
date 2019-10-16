@@ -43,6 +43,13 @@ class cfg(Log):
         return self._environment
 
     @property
+    def ws_opts(self):
+        if self._ws_opts is None:
+            opts = self._load_cfg_fl('conf', 'ws.yml')
+            self._ws_opts = opts[self.environment]
+        return self._ws_opts
+
+    @property
     def srv_opts(self):
         if self._srv_opts is None:
             opts = self._load_cfg_fl('conf', 'srv.yml')
@@ -67,6 +74,7 @@ class cfg(Log):
 
     def reset(self):
         self._cfg = {}
+        self._ws_opts = None
         self._db_opts = None
         self._srv_opts = None
         self._environment = None
