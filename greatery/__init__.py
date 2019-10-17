@@ -14,7 +14,7 @@ _log = logging.getLogger(__name__)
 _log.setLevel(logging.DEBUG)
 
 
-class Log:
+class _Log:
     @property
     def log(self):
         return logging.getLogger(
@@ -24,7 +24,7 @@ class Log:
             ]))
 
 
-class cfg(Log):
+class cfg(_Log):
 
     def _load_cfg_fl(self, *path_parts):
         fp = os.path.join(_root, *path_parts)
