@@ -71,7 +71,6 @@ class Router(WebSocketHandler, greatery._Log):
         if self.table is None:
             self.log.error(f"no table to fetch")
             return
-        self.log.debug(f"on_fetch: {msg}")
         start = self._live[self.id].get('start', 0)
         self.log.info(f"fetch start {start}")
         fetch = await self.table.filter(id__gte=start)
@@ -96,14 +95,11 @@ class Router(WebSocketHandler, greatery._Log):
         if self.model is None:
             self.log.error(f"no model to predict")
             return
-        self.log.debug(f"on_model: {msg}")
         eng = self.application.engine
-        self.log.info(f"model target {msg}")
+        self.log.info(f"model target '{msg}'")
         model = eng.onion._graph_models[self.model]
-        self.log.info(f"model space {len(model.tokens)}")
-        resp = model.predict([msg]
-            ).iloc[:_TOP_N].to_dict(orient='records')
-        self.log.info(f"model top {resp['name']}")
+        resp = model.predict([msg]).iloc[:_TOP_N].to_dict(orient='records')
+        self.log.info(f"model predict best guess '{resp[0]['check']}'")
         self.write_message(json.dumps(resp))
 
     async def on_write(self, msg):

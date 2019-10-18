@@ -50,7 +50,7 @@ class Engine:
                 dat = await sub[name].all()
                 if not dat: continue
                 keys = [k for k in vars(dat[0]).keys()
-                        if not k.startswith('_')]
+                        if not k.startswith('_') and k != 'id']
                 data[name] = pd.DataFrame.from_records(
                     ({k: getattr(d, k) for k in keys} for d in dat)
                 )

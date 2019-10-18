@@ -21,7 +21,8 @@ class _Log:
             '.'.join([
                 self.__module__,
                 self.__class__.__name__
-            ]))
+            ])
+        )
 
 
 class cfg(_Log):
