@@ -1,4 +1,6 @@
 local:
     port: 5000
     debug: True
+    autoreload: True
     serve_traceback: True
+    compress_response: True

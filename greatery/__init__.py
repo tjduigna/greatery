@@ -34,7 +34,7 @@ class cfg(_Log):
                 with open(fp, 'r') as f:
                     self._cfg[fp] = yaml.safe_load(f.read())
             except FileNotFoundError as e:
-                _log.error(f"file not found: {fp}")
+                self.log.error(f"file not found: {fp}")
         return self._cfg[fp]
 
     @property

@@ -58,9 +58,15 @@ class Router(WebSocketHandler, greatery._Log):
 
     def open(self):
         """Keep track of all live connections"""
-        self.id = uuid.uuid4()
-        self._live[self.id] = {'id': self.id}
-        self.log.info(f"opened: {self.id}")
+        self.id = str(uuid.uuid4())
+        self._live[self.id] = {'id': self.id, 'con': self}
+        msg = f"opened: {self.id}"
+        self.log.info(msg)
+        self.write_message(json.dumps({'id': self.id}))
+
+    def _incref(self, route):
+        cnt = self._live[self.id].get(route, 0)
+        self._live[self.id][route] = cnt + 1
 
     async def on_fetch(self, msg):
         """Fetches all data of a given data concept,
@@ -71,6 +77,7 @@ class Router(WebSocketHandler, greatery._Log):
         if self.table is None:
             self.log.error(f"no table to fetch")
             return
+        self._incref("fetch")
         start = self._live[self.id].get('start', 0)
         self.log.info(f"fetch start {start}")
         fetch = await self.table.filter(id__gte=start)
@@ -95,6 +102,7 @@ class Router(WebSocketHandler, greatery._Log):
         if self.model is None:
             self.log.error(f"no model to predict")
             return
+        self._incref("model")
         eng = self.application.engine
         self.log.info(f"model target '{msg}'")
         model = eng.onion._graph_models[self.model]
@@ -112,6 +120,7 @@ class Router(WebSocketHandler, greatery._Log):
             if getattr(self, attr) is None:
                 self.log.error(f"no {attr} for write. aborting")
                 return
+        self._incref("write")
         self.log.debug(f"on_write: {msg}")
         kws = {key: msg[key] for key in
                [key for key in self.keys if key != self.tack]}
@@ -142,9 +151,9 @@ class Router(WebSocketHandler, greatery._Log):
         self.set_header("Content-Type",
                         "application/json")
 
-    def on_close(self):
-        self._live.pop(self.id)
+    async def on_close(self):
         self.log.info(f"closed: {self.id}")
+        self._live.pop(self.id)
 
     def check_origin(self, origin):
         self.log.warning(f"ALLOWING ALL CORS")

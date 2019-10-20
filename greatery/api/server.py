@@ -7,7 +7,7 @@ import json
 import asyncio
 
 from  tornado.httpserver import HTTPServer
-from tornado.ioloop import IOLoop
+from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.web import Application
 from sprout.init_db import db_pool
 
@@ -16,22 +16,36 @@ from greatery.core import Engine
 from greatery.api.router import Router
 
 
+def heartbeat(callback_time=5000, jitter=0.1):
+    """Ping all live connections every
+    callback_time milliseconds"""
+    def _monitor():
+        msg = f"Pinging {len(Router._live)} clients"
+        greatery.cfg.log.info(msg)
+        for id_, con in Router._live.items():
+            greatery.cfg.log.debug(id_)
+            con['con'].write_message(
+                json.dumps({"ping": "hello",
+                            "id": str(id_)})
+            )
+    return PeriodicCallback(_monitor,
+                            jitter=jitter,
+                            callback_time=callback_time)
+
+
 def run():
-    stg = {
-        'cookie_secret': os.urandom(12),
-        'xsrf_cookies': True,
-        'debug': True,
-        'autoreload': True,
-        'compress_response': True
-    }
+    opts = greatery.cfg.srv_opts
+    port = opts.pop('port')
     app = Application([
         (r"/socket", Router),
-    ], **stg)
+    ], **opts)
     loop = asyncio.get_event_loop()
     app.engine = Engine(loop=loop)
     app.db_pool = loop.run_until_complete(db_pool('greatery'))
     srv = HTTPServer(app)
-    srv.listen(greatery.cfg.srv_opts['port'])
+    srv.listen(port)
+    opts['port'] = port
+    heartbeat().start()
     IOLoop.current().start()
 
 
