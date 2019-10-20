@@ -2,5 +2,3 @@ pytest-tornado
 tornado
 sprout
 onion
-react
-websockets
