@@ -134,6 +134,8 @@ class Router(WebSocketHandler, greatery._Log):
         """Route incoming websocket message to
         appropriate handler.
         """
+        self.log.info("HIT ON MESSAGE")
+        self.log.info(message)
         message = json.loads(message)
         kind = message['kind']
         route = message['route']
