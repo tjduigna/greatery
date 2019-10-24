@@ -85,3 +85,5 @@ class cfg(_Log):
 
 cfg = cfg()
 
+
+from greatery import core

@@ -16,21 +16,25 @@ from greatery.core import Engine
 from greatery.api.router import Router
 
 
-def heartbeat(callback_time=5000, jitter=0.1):
-    """Ping all live connections every
-    callback_time milliseconds"""
+def heartbeat(interval=5000, jitter=0.1):
+    """Ping all live connections for debugging
+
+    Args:
+        interval (int): milliseconds between messages
+        jitter (float): fuzz for simultaneous load
+    """
     def _monitor():
         msg = f"Pinging {len(Router._live)} clients"
         greatery.cfg.log.info(msg)
         for id_, con in Router._live.items():
+            print(id_, con)
             greatery.cfg.log.debug(id_)
             con['con'].write_message(
                 json.dumps({"ping": "hello",
-                            "id": str(id_)})
-            )
+                            "id": str(id_)}))
     return PeriodicCallback(_monitor,
                             jitter=jitter,
-                            callback_time=callback_time)
+                            callback_time=interval)
 
 
 def run():
