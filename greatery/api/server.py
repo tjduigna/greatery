@@ -49,7 +49,8 @@ def run():
     srv = HTTPServer(app)
     srv.listen(port)
     opts['port'] = port
-    heartbeat().start()
+    #heartbeat().start()
+
     IOLoop.current().start()
 
 

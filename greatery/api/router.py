@@ -8,13 +8,13 @@ import uuid
 from tornado.websocket import WebSocketHandler
 
 import greatery
-
 from greatery.orm.food import Ingredient
 from greatery.orm.food import Recipe
 from greatery.orm.food import Meal
 
 
-_TOP_N = 3
+_TOPN = 3
+_CHUNK = 1000
 _KEYS = {}
 _TACK = {}
 _TABLES = {
@@ -27,136 +27,153 @@ _TABLES = {
 class Router(WebSocketHandler, greatery._Log):
     """Core websocket handler class for greatery.
     on_message routes behavior based on the key
-    in the message payload. 
+    in the message payload. Expects client to
+    manage interactive state and provide it to
+    routed methods since the "state" is driven
+    by the user.
     
-    Note: Supported routes
+    Supported keys
+        - route - one of the above (the verb)
+        - kind - a data concept (the noun)
+        - content - client message
+
+    Supported routes
         - fetch
         - model
         - write
 
-    Note: Supported keys
-        - route - one of the above
-        - kind - a data concept
-        - content - client message
+    Note:
+        Should standardize this routing to map directly
+        to CRUD or something not just made up...
     """
-    table = None
-    model = None
-    keys = ['id', 'name', 'desc']
-    tack = 'id'
     _live = {}
 
-    def tbl_fields(self):
-        """Return a list of the relevant fields
-        for a given data concept."""
-        if self.keys is not None:
-            return self.keys
-        if self.table is not None:
-            flds = vars(self.table).keys()
-            return [key for key in flds
-                    if not key.startswith('_')]
-        return []
 
     def open(self):
         """Keep track of all live connections"""
         self.id = str(uuid.uuid4())
-        self._live[self.id] = {'id': self.id, 'con': self}
+        self._live[self.id] = {'id': self.id}
         msg = f"opened: {self.id}"
         self.log.info(msg)
         self.write_message(json.dumps({'id': self.id}))
 
-    def _incref(self, route):
-        cnt = self._live[self.id].get(route, 0)
-        self._live[self.id][route] = cnt + 1
 
-    async def on_fetch(self, msg):
+    def on_close(self):
+        self.log.info(f"closed: {self.id}")
+        self._live.pop(self.id)
+
+
+    def check_origin(self, origin):
+        self.log.warning(f"ALLOWING ALL CORS: {origin}")
+        return True
+
+
+    async def _incref(self, route):
+        """Keep count of all requests from client"""
+        self._live[self.id].setdefault(route, 0)
+        self._live[self.id][route] += 1
+
+
+    async def on_fetch(self, kind, msg):
         """Fetches all data of a given data concept,
         optionally "caching" the greatest tack field
         in the query response, to use as a filter in
         subsequent queries to fetch data.
         """
-        if self.table is None:
-            self.log.error(f"no table to fetch")
+        tbl = _TABLES.get(kind, None)
+        if tbl is None:
+            self.log.error("'kind' not recognized")
             return
-        self._incref("fetch")
-        start = self._live[self.id].get('start', 0)
-        self.log.info(f"fetch start {start}")
-        fetch = await self.table.filter(id__gte=start)
-        keys = self.tbl_fields()
-        self.log.info(f"fetch keys {keys}")
-        resp = [{key: getattr(rec, key) for key in keys}
-                for rec in fetch]
-        self.log.info(f"fetch count {len(resp)}")
-        if self.tack is None:
-            self.log.warning(f"not caching table read")
-        else:
-            start = max((r[self.tack] for r in resp))
-            self._live[self.id]['start'] = start
-        self.write_message(json.dumps(resp))
+        start = msg.get('start', 0)
+        self.log.info(f"start: {start}")
+        stop = start + _CHUNK
+        fetch = await tbl.filter(id__gte=start, id__lte=stop)
+        keys = getattr(tbl, 'ui', None)
+        if not keys:
+            self.log.error(f"ui keys for {tbl} not found")
+            return
+        ret = json.dumps(
+            [{key: getattr(rec, key) for key in keys} for rec in fetch]
+        )
+        self.write_message(ret)
 
-    async def on_model(self, msg):
+
+    async def on_model(self, kind, msg):
         """Provided a message from the client, run
         entity recognition on the content and serve
         back the most closely matching data currently
         in the dataset.
         """
-        if self.model is None:
-            self.log.error(f"no model to predict")
-            return
-        self._incref("model")
+        self.log.info("hit model")
         eng = self.application.engine
-        self.log.info(f"model target '{msg}'")
-        model = eng.onion._graph_models[self.model]
-        resp = model.predict([msg]).iloc[:_TOP_N].to_dict(orient='records')
-        self.log.info(f"model predict best guess '{resp[0]['check']}'")
-        self.write_message(json.dumps(resp))
+        self.log.info(f"model target '{msg['content']}'")
+        model = eng.onion._graph_models.get(kind, None)
+        if model is None:
+            self.log.error(f"found no '{kind}' model")
+            return
+        if isinstance(msg['content'], str):
+            pred = model.predict([msg['content']])
+        else:
+            self.log.error(f"support msg content type {type(msg['content'])}!")
+        ret = json.dumps(
+            pred.iloc[:_TOPN].to_dict(orient='records')
+        )
+        self.write_message(ret)
 
-    async def on_write(self, msg):
+
+    async def on_write(self, kind, msg):
         """Write a new record of data to a specific
         data concept's database table. Requires the
         specification of 'table', 'keys', as well as
         'tack' in order to persist data (right now).
         """
-        for attr in ['table', 'keys', 'tack']:
-            if getattr(self, attr) is None:
-                self.log.error(f"no {attr} for write. aborting")
-                return
-        self._incref("write")
-        self.log.debug(f"on_write: {msg}")
-        kws = {key: msg[key] for key in
-               [key for key in self.keys if key != self.tack]}
-        rec = await self.table.create(**kws)
-        self.log.info(f"adding record {msg}")
-        if rec.name:
-            self.log.info(f"record name |{name}|")
-            await ing.save()
+        self.log.info("hit write")
+        self.log.info(msg)
+        tbl = _TABLES.get(kind, None)
+        self.log.info(tbl)
+        if tbl is None:
+            self.log.error(f"{kind} not recognized")
+            return
+        pk = getattr(tbl, 'pk', None)
+        self.log.info(pk)
+        if pk is None:
+            self.log.error(f"pk not defined for {tbl}")
+            return
+        ui = getattr(tbl, 'ui', None)
+        self.log.info(ui)
+        if ui is None:
+            self.log.error(f"keys not defined for {tbl}")
+            return
+        keys = [k for k in ui if k != pk]
+        self.log.info(keys)
+        kws = {'name': msg['content']}
+        self.log.info(kws)
+        rec = await tbl.create(**kws)
+        self.log.info(rec)
+        await rec.save()
 
-    async def on_message(self, message):
+
+    async def on_message(self, msg):
         """Route incoming websocket message to
         appropriate handler.
         """
-        self.log.info("HIT ON MESSAGE")
-        self.log.info(message)
-        message = json.loads(message)
-        kind = message['kind']
-        route = message['route']
-        content = message['content']
-        self.log.debug(f"routing {kind} {route} with {content}")
-        self.model = kind
-        self.table = _TABLES[kind]
-        self.keys = _KEYS.get(kind, self.keys)
-        self.tack = _TACK.get(kind, self.tack)
-        await {
-            'fetch': self.on_fetch,
-            'model': self.on_model,
-            'write': self.on_write,
-        }[route](content)
-        self.set_header("Content-Type",
-                        "application/json")
-
-    async def on_close(self):
-        self.log.info(f"closed: {self.id}")
-        self._live.pop(self.id)
-
-    def check_origin(self, origin):
-        self.log.warning(f"ALLOWING ALL CORS")
-        return True
+        msg = json.loads(msg)
+        kind = msg.get('kind', None)
+        route = msg.get('route', None)
+        await self._incref(route)
+        self.log.info(self._live[self.id])
+        print(msg)
+        if kind is None:
+            self.log.error("'kind' not provided")
+            return
+        if route is None:
+            self.log.error("'route' not provided")
+            return
+        if route == 'fetch':
+            await self.on_fetch(kind, msg)
+        elif route == 'model':
+            await self.on_model(kind, msg)
+        elif route == 'write':
+            await self.on_write(kind, msg)
+        else:
+            self.log.error(f"kind='{kind}' not recognized")

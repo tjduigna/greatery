@@ -6,6 +6,8 @@ from tortoise.models import Model
 from tortoise import fields
 
 class Ingredient(Model):
+    pk = 'id'
+    ui = ['id', 'name', 'desc']
     id = fields.IntField(pk=True)
     name = fields.TextField()
     desc = fields.TextField()
