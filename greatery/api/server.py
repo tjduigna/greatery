@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2019, Greatery Development Team
 # Distributed under the terms of the Apache License 2.0
+
 import os
 import json
 import asyncio
@@ -13,6 +14,7 @@ from sprout.init_db import db_pool
 
 import greatery
 from greatery.core import Engine
+from greatery.api.auth import LoginHandler
 from greatery.api.router import Router
 
 
@@ -41,6 +43,7 @@ def run():
     opts = greatery.cfg.srv_opts
     port = opts.pop('port')
     app = Application([
+        (r"/login", LoginHandler),
         (r"/socket", Router),
     ], **opts)
     loop = asyncio.get_event_loop()

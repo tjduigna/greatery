@@ -4,9 +4,11 @@
 
 import os
 import yaml
+import getpass
 import logging.config
 
 
+_home = os.path.expanduser('~')
 _root = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(_root, 'conf', 'log.yml'), 'r') as f:
     logging.config.dictConfig(yaml.safe_load(f.read()))
@@ -27,15 +29,21 @@ class _Log:
 
 class cfg(_Log):
 
-    def _load_cfg_fl(self, *path_parts):
-        fp = os.path.join(_root, *path_parts)
-        if not self._cfg.get(fp, None):
-            try:
-                with open(fp, 'r') as f:
-                    self._cfg[fp] = yaml.safe_load(f.read())
-            except FileNotFoundError as e:
-                self.log.error(f"file not found: {fp}")
-        return self._cfg[fp]
+    def _load_cfg_fl(self, *path_parts, root=_root, cache=True):
+        fp = os.path.join(root, *path_parts)
+        r = {}
+        if cache:
+            r = self._cfg.get(fp, {})
+            if r:
+                return r
+        try:
+            with open(fp, 'r') as f:
+                r = yaml.safe_load(f.read())
+        except FileNotFoundError as e:
+            self.log.error(f"file not found: {fp}")
+        if cache:
+            self._cfg[fp] = r
+        return r
 
     @property
     def environment(self):
@@ -61,7 +69,13 @@ class cfg(_Log):
     def db_opts(self):
         if self._db_opts is None:
             opts = self._load_cfg_fl('conf', 'db.yml')
+            rc = {}
+            try:
+                rc = self._load_cfg_fl('.greateryrc', root=_home)
+            except FileNotFoundError:
+                self.log.error("no ~/.greateryrc found")
             self._db_opts = opts[self.environment]
+            self._db_opts.update(rc)
         return self._db_opts
 
     def db_str(self, dbname=None, schema=None):
