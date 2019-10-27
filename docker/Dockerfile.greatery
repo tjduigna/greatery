@@ -1,4 +1,4 @@
-FROM greatery-base:latest
+FROM 597104984438.dkr.ecr.us-east-1.amazonaws.com/greatery:base-latest
 
 WORKDIR /home/ec2-user
 ENV PYTHONPATH=/home/ec2-user
