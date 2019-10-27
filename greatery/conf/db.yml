@@ -7,3 +7,12 @@ local:
     port: 5432
     min_size: 2
     max_size: 100
+
+cloud:
+    host: greatery.cp8b9zho8ze0.us-east-1.rds.amazonaws.com
+    port: 5432
+    driver: postgres
+    username: postgres
+    database: greatery
+    min_size: 2
+    max_size: 100

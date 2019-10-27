@@ -1,0 +1,16 @@
+FROM greatery-base:latest
+
+WORKDIR /home/ec2-user
+ENV PYTHONPATH=/home/ec2-user
+
+COPY --chown=ec2-user sprout/ sprout/
+COPY --chown=ec2-user onion/ onion/
+COPY --chown=ec2-user greatery/ greatery/
+
+RUN cd sprout && pip install -e .
+RUN cd onion && pip install -e .
+RUN cd greatery && pip install -e .
+
+USER ec2-user
+
+CMD ["python", "greatery/greatery/api/server.py"]

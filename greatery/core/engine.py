@@ -5,8 +5,9 @@ import asyncio
 
 import pandas as pd
 import onion
-from sprout.init_db import init_db
+from sprout import Runner
 
+import greatery
 from greatery.orm.food import (
     Unit,
     Quantity,
@@ -57,7 +58,7 @@ class Engine:
         graph.update(data)
         return graph
 
-    def __init__(self, loop=None):
+    def __init__(self, runner=None):
         graph = {
             'food': [
                 'ingredient',
@@ -65,7 +66,9 @@ class Engine:
                 'meal',
             ]
         }
-        loop = loop or asyncio.get_event_loop()
-        loop.run_until_complete(init_db('greatery', ['food']))
-        graph = loop.run_until_complete(self.fetchall(graph))
+        self.runner = runner or Runner(greatery.cfg.db_opts,
+                                       app='greatery',
+                                       schemas=['food'])
+        self.runner.init_schemas()
+        graph = self.runner._loop.run_until_complete(self.fetchall(graph))
         self.onion = onion.Onion('food', graph, None)

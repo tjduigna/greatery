@@ -10,7 +10,7 @@ import asyncio
 from  tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.web import Application
-from sprout.init_db import db_pool
+from sprout import Runner
 
 import greatery
 from greatery.core import Engine
@@ -47,8 +47,11 @@ def run():
         (r"/socket", Router),
     ], **opts)
     loop = asyncio.get_event_loop()
-    app.engine = Engine(loop=loop)
-    app.db_pool = loop.run_until_complete(db_pool('greatery'))
+    runner = Runner(greatery.cfg.db_opts,
+                    app='greatery',
+                    schemas=['food'])
+    app.engine = Engine(runner=runner)
+    app.db_pool = runner.init_db_pool()
     srv = HTTPServer(app)
     srv.listen(port)
     opts['port'] = port

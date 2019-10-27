@@ -55,14 +55,20 @@ class cfg(_Log):
     def ws_opts(self):
         if self._ws_opts is None:
             opts = self._load_cfg_fl('conf', 'ws.yml')
-            self._ws_opts = opts[self.environment]
+            if self.environment not in opts:
+                self.log.error("ws_opts: environment not found.")
+                self.log.error("ws_opts: defaulting to 'local'")
+            self._ws_opts = opts.get(self.environment, opts['local'])
         return self._ws_opts
 
     @property
     def srv_opts(self):
         if self._srv_opts is None:
             opts = self._load_cfg_fl('conf', 'srv.yml')
-            self._srv_opts = opts[self.environment]
+            if self.environment not in opts:
+                self.log.error("srv_opts: environment not found.")
+                self.log.error("srv_opts: defaulting to 'local'")
+            self._srv_opts = opts.get(self.environment, opts['local'])
         return self._srv_opts
 
     @property
@@ -78,14 +84,14 @@ class cfg(_Log):
             self._db_opts.update(rc)
         return self._db_opts
 
-    def db_str(self, dbname=None, schema=None):
-        o = self.db_opts
-        dbname = dbname or o['database']
-        auth = f"{o['username']}:{o['password']}"
-        url = f"{o['host']}:{o['port']}"
-        if schema is not None:
-            return f"{o['driver']}://{auth}@{url}/{dbname}?schema={schema}"
-        return f"{o['driver']}://{auth}@{url}/{dbname}"
+#    def db_str(self, dbname=None, schema=None):
+#        o = self.db_opts
+#        dbname = dbname or o['database']
+#        auth = f"{o['username']}:{o['password']}"
+#        url = f"{o['host']}:{o['port']}"
+#        if schema is not None:
+#            return f"{o['driver']}://{auth}@{url}/{dbname}?schema={schema}"
+#        return f"{o['driver']}://{auth}@{url}/{dbname}"
 
     def reset(self):
         self._cfg = {}
