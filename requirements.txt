@@ -2,3 +2,4 @@ pytest-tornado
 tornado
 sprout
 onion
+boto3
