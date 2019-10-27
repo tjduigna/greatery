@@ -10,8 +10,9 @@ import asyncio
 from  tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.web import Application
-from sprout import Runner
+from tornado.web import RequestHandler
 
+from sprout import Runner
 import greatery
 from greatery.core import Engine
 from greatery.api.auth import LoginHandler
@@ -38,11 +39,18 @@ def heartbeat(interval=5000, jitter=0.1):
                             jitter=jitter,
                             callback_time=interval)
 
+class HealthHandler(RequestHandler):
+
+    async def get(self):
+        self.write(json.dumps({"status": "App is up"}))
+        self.set_status(200)
+
 
 def run():
     opts = greatery.cfg.srv_opts
     port = opts.pop('port')
     app = Application([
+        (r"/health", HealthHandler),
         (r"/login", LoginHandler),
         (r"/socket", Router),
     ], **opts)
