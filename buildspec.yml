@@ -1,0 +1,26 @@
+version: 0.2
+
+env:
+  variables:
+    ENVIRONMENT: cloud
+
+phases:
+  install:
+    commands:
+      - echo Installing
+      - apt-get update -y
+    finally:
+      - echo apt-get updated
+  build:
+    commands:
+      - echo Installing on `date`
+      - python setup.py sdist
+    finally:
+      - echo build completed
+  post_build:
+    commands:
+      - echo Post build
+      - ls dist/
+artifacts:
+  files:
+    - dist/greatery-0.0.0.tar.gz
