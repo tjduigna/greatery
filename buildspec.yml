@@ -10,10 +10,6 @@ phases:
       python: 3.7
     commands:
       - python --version
-      - echo Installing
-      - apt-get update -y
-    finally:
-      - echo apt-get updated
   build:
     commands:
       - echo Installing on `date`
