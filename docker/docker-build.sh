@@ -1,11 +1,17 @@
 #!/bin/bash
 
-# assumes already logged in to docker hub
-#sudo docker build -t greatery:base-latest -f Dockerfile.base .
-sudo docker build -t 597104984438.dkr.ecr.us-east-1.amazonaws.com/greatery:latest -f Dockerfile.greatery .
+# log in to ECR docker registry
+$(aws ecr get-login --no-include-email --region us-east-1)
 
-# sudo docker image inspect greatery:latest > manifest.json
+# add step for updating base image
+# read somewhere ECR doesn't cache
+# correctly so do this on-demand
 
-# assumes aws configure already done
-aws ecr get-login
-sudo docker `aws ecr get-login` # but remove the -e none ? unset param..
+#sudo docker build -t greatery-base -f Dockerfile.base .
+#sudo docker tag greatery-base:latest 597104984438.dkr.ecr.us-east-1.amazonaws.com/greatery-base:latest
+#sudo docker push 597104984438.dkr.ecr.us-east-1.amazonaws.com/greatery-base:latest
+
+# build new image and push to ECR
+sudo docker build -t greatery -f Dockerfile.greatery .
+sudo docker tag greatery:latest 597104984438.dkr.ecr.us-east-1.amazonaws.com/greatery:latest
+sudo docker push 597104984438.dkr.ecr.us-east-1.amazonaws.com/greatery:latest
