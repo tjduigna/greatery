@@ -85,8 +85,8 @@ class Router(WebSocketHandler, greatery._Log):
             self.log.error("'kind' not recognized")
             return
         start = msg.get('start', 0)
-        self.log.info(f"start: {start}")
         stop = start + _CHUNK
+        self.log.info(f"start: {start}, stop: {stop}")
         fetch = await tbl.filter(id__gte=start, id__lte=stop)
         keys = getattr(tbl, 'ui', None)
         if not keys:
@@ -95,6 +95,7 @@ class Router(WebSocketHandler, greatery._Log):
         ret = json.dumps(
             [{key: getattr(rec, key) for key in keys} for rec in fetch]
         )
+        self.log.info(ret)
         self.write_message(ret)
 
 

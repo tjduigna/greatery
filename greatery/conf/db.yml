@@ -3,7 +3,7 @@ local:
     driver: postgres
     username: postgres
     password: password1
-    database: postgres
+    database: greatery
     port: 5432
     min_size: 2
     max_size: 100
