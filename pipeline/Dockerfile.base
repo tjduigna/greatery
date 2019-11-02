@@ -1,3 +1,4 @@
 FROM tensorflow/tensorflow:2.0.0-py3
+RUN python -m pip install --upgrade pip
 RUN pip install pytest-tornado tornado pytest-coverage pytest pyyaml pandas gensim nltk aiosqlite asyncpg tortoise-orm pytest-asyncio boto3
 RUN useradd -ms /bin/bash ec2-user
