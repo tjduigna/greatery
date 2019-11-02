@@ -7,19 +7,21 @@ env:
 phases:
   install:
     runtime-versions:
-      python: 3.7
+      docker: 18
+  pre_build:
     commands:
-      - python --version
+      - echo Logging into Amazon ECR
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
   build:
     commands:
-      - echo Installing on `date`
-      - python setup.py sdist
-    finally:
-      - echo build completed
+      - echo Building on `date`
+      - echo Root directory `ls`
+      # - docker build -t $IMAGE_REPO_NAME:base-$IMAGE_TAG -f pipeline/Dockerfile.base .
+      # - docker tag $IMAGE_REPO_NAME:base-$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:base-$IMAGE_TAG
+      - docker build -t $IMAGE_REPO_NAME:greatery-$IMAGE_TAG -f pipeline/Dockerfile.greatery .
+      - docker tag $IMAGE_REPO_NAME:greatery-$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:greatery-$IMAGE_TAG
   post_build:
     commands:
-      - echo Post build
-      - ls dist/
-artifacts:
-  files:
-    - dist/greatery-0.0.0.tar.gz
+      - echo Build completed `date`
+      - echo Pushing docker image
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:greatery-$IMAGE_TAG
