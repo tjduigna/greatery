@@ -3,7 +3,7 @@ ARG AWS_ACCOUNT_ID
 ARG IMAGE_REPO_NAME
 ARG AWS_DEFAULT_REGION
 
-FROM ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/greatery:base-${IMAGE_TAG}
+FROM ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:base-${IMAGE_TAG}
 
 WORKDIR /home/ec2-user
 ENV PYTHONPATH=/home/ec2-user
