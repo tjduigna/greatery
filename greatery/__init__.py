@@ -84,15 +84,6 @@ class cfg(_Log):
             self._db_opts.update(rc)
         return self._db_opts
 
-#    def db_str(self, dbname=None, schema=None):
-#        o = self.db_opts
-#        dbname = dbname or o['database']
-#        auth = f"{o['username']}:{o['password']}"
-#        url = f"{o['host']}:{o['port']}"
-#        if schema is not None:
-#            return f"{o['driver']}://{auth}@{url}/{dbname}?schema={schema}"
-#        return f"{o['driver']}://{auth}@{url}/{dbname}"
-
     def reset(self):
         self._cfg = {}
         self._ws_opts = None
