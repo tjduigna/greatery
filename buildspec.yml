@@ -12,8 +12,6 @@ phases:
     commands:
       - echo Logging into Amazon ECR
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-      - git clone https://github.com/tjduigna/sprout.git/ sprout/
-      - git clone https://github.com/tjduigna/onion.git/ onion/
   build:
     commands:
       - echo Building on `date`
