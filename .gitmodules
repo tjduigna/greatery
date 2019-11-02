@@ -1,0 +1,6 @@
+[submodule "onion"]
+	path = onion
+	url = https://github.com/tjduigna/onion.git
+[submodule "sprout"]
+	path = sprout
+	url = https://github.com/tjduigna/sprout.git
