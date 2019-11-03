@@ -18,6 +18,10 @@ RUN cd sprout && pip install -e .
 RUN cd onion && pip install -e .
 RUN pip install -e .
 
+RUN mkdir -p nltk_data
+RUN python -m nltk.downloader punkt -d nltk_data
+
 USER ec2-user
 
-CMD ["python", "greatery/greatery/api/server.py"]
+
+CMD ["python", "greatery/api/server.py"]
