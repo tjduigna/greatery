@@ -114,6 +114,9 @@ class Router(WebSocketHandler, greatery._Log):
             return
         if isinstance(msg['content'], str):
             pred = model.predict([msg['content']])
+        elif isinstance(msg['content'], dict):
+            self.log.warn("poor support for dicts right now")
+            pred = model.predict([' '.join(msg['content'].values())])
         else:
             self.log.error(f"support msg content type {type(msg['content'])}!")
         ret = json.dumps(
