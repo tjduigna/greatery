@@ -7,6 +7,8 @@ import yaml
 import getpass
 import logging.config
 
+import boto3
+
 
 _home = os.path.expanduser('~')
 _root = os.path.dirname(os.path.abspath(__file__))
@@ -71,6 +73,17 @@ class cfg(_Log):
             self._srv_opts = opts.get(self.environment, opts['local'])
         return self._srv_opts
 
+    def _get_aws_secrets(self, *params):
+        if self._client is None:
+            self._client = boto3.client('ssm', region_name='us-east-1')
+        try:
+            params = self._client.get_parameters(Names=params,
+                                                 WithDecryption=True)
+        except Exception as e:
+            self.log.error("failed to fetch secret")
+            params = []
+        return params
+
     @property
     def db_opts(self):
         if self._db_opts is None:
@@ -82,10 +95,15 @@ class cfg(_Log):
                 self.log.error("no ~/.greateryrc found")
             self._db_opts = opts[self.environment]
             self._db_opts.update(rc)
+            if self.environment == 'cloud':
+                secrets = self._get_aws_secrets('greatery-db-pw')
+                secrets = [obj['Value'] for obj in secrets['Parameters']]
+                self._db_opts.update({'password': secrets[0]})
         return self._db_opts
 
     def reset(self):
         self._cfg = {}
+        self._client = None
         self._ws_opts = None
         self._db_opts = None
         self._srv_opts = None
